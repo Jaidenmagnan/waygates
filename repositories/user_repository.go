@@ -3,7 +3,6 @@ package repositories
 import (
 	"database/sql"
 
-	"github.com/Jaidenmagnan/waygates/db"
 	"github.com/Jaidenmagnan/waygates/models"
 )
 
@@ -11,42 +10,53 @@ type UserRepository struct {
     db *sql.DB
 }
 
-func NewUserRepository() *UserRepository {
-    return &UserRepository{db: db.DB}
+func NewUserRepository(db *sql.DB) *UserRepository {
+    return &UserRepository{db: db}
 }
 
 
-func (r *UserRepository) Create(user models.User) (int64, error) {
-    query := "INSERT INTO users (email, password) VALUES (?, ?)"
+func (r *UserRepository) Create(user models.CreateUser) (models.User, error) {
+    query := "INSERT INTO users (email, username,password) VALUES (?, ?, ?)"
     
-    result, err := r.db.Exec(query, user.Email, user.Password)
+    result, err := r.db.Exec(query, user.Email, user.Username, user.Password)
     if err != nil {
-        return 0, err
+        return models.User{}, err
     }
     
-    return result.LastInsertId()
+    id, err := result.LastInsertId()
+    if err != nil {
+        return models.User{}, err
+    }
+
+    return models.User{
+        ID:       int(id),
+        Email:    user.Email,
+        Username: user.Username,
+        Password: user.Password,
+    }, nil
 }
+func (r *UserRepository) GetByEmail(email string) (*models.User, bool) {
+	query := "SELECT id, email, username, password FROM users WHERE email = ?"
 
-func (r *UserRepository) GetByEmail(email string) (*models.User, error) {
-	query := "SELECT id, email, password FROM users WHERE email = ?"
-
-	rows, err := r.db.Query(query, email)
-	if err != nil {
-		return nil, err
-	}
-	
-	defer rows.Close()
+	row := r.db.QueryRow(query, email)
 
 	var user models.User
-	for rows.Next() {
-		if err := rows.Scan(&user.ID, &user.Email, &user.Password); err != nil {
-			return nil, err
-		}
+	if err := row.Scan(&user.ID, &user.Email, &user.Username, &user.Password); err != nil {
+		return nil, false
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, err
+	return &user, true
+}
+
+func (r *UserRepository) GetById(id int) (*models.User, bool) {
+	query := "SELECT id, email, username, password FROM users WHERE id = ?"
+
+	row := r.db.QueryRow(query, id)
+	
+	var user models.User
+	if err := row.Scan(&user.ID, &user.Email, &user.Username, &user.Password); err != nil {
+		return nil, false
 	}
 
-	return &user, nil
+	return &user, true
 }
