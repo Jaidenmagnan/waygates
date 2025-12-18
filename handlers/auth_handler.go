@@ -1,5 +1,4 @@
-// The path handlers/auth_handler.go implements utilities for authenticating the user and
-// interfacing with the auth service.
+// Implements utilities for authenticating the user and interfacing with the auth service.
 package handlers
 
 import (

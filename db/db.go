@@ -1,3 +1,4 @@
+// This package initializes the db.
 package db
 
 import (
@@ -7,8 +8,10 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// The global DB connection.
 var DB *sql.DB
 
+// Connects to the database.
 func Connect() error {
 	var err error
 	DB, err = sql.Open("sqlite3", "./app.db")

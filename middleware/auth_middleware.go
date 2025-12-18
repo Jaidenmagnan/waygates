@@ -1,3 +1,4 @@
+// Middleware to check if the user is authenticated.
 package middleware
 
 import (
@@ -15,6 +16,7 @@ func NewAuthMiddleware(authService *services.AuthService) *AuthMiddleware {
 	}
 }
 
+// AuthMiddleware checks for a valid JWT token in the request cookies.
 func (m *AuthMiddleware) AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString, err := c.Cookie("Authorization")

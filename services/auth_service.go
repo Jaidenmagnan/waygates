@@ -1,3 +1,4 @@
+// Provides authentication services such as signup, signin, and token generation.
 package services
 
 import (
@@ -22,6 +23,7 @@ func NewAuthService(userRepository *repositories.UserRepository) *AuthService {
 	}
 }
 
+// Registers a new user with the provided username, email, and password.
 func (s *AuthService) Signup(username string, email string, password string) (models.User, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -42,22 +44,22 @@ func (s *AuthService) Signup(username string, email string, password string) (mo
 	return user, nil
 }
 
+// Authenticates a user with the provided email and password.
 func (s *AuthService) Signin(email string, password string) (*models.User, error) {
 	user, ok := s.userRepository.GetByEmail(email)
 	if !ok {
-		slog.Error("failed to get user by email")
 		return nil, errors.New("invalid email or password")
 	}
 
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		slog.Error("invalid password", "error", err)
 		return nil, err
 	}
 
 	return user, nil
 }
 
+// Creates a JWT token for the authenticated user.
 func (s *AuthService) GenerateToken(user *models.User) (string, error) {
 	expTime := jwt.NewNumericDate(jwt.TimeFunc().Add(7 * 24 * time.Hour))
 	claims := jwt.MapClaims{
@@ -76,6 +78,7 @@ func (s *AuthService) GenerateToken(user *models.User) (string, error) {
 	return tokenString, nil
 }
 
+// Retrieves a user from the provided JWT token.
 func (s *AuthService) GetUserFromToken(tokenString string) (*models.User, bool) {
 	token, err := s.validateToken(tokenString)
 	if err != nil {
@@ -84,19 +87,13 @@ func (s *AuthService) GetUserFromToken(tokenString string) (*models.User, bool) 
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		exp := claims["exp"].(float64)
-		if float64(time.Now().Unix()) > exp {
-			slog.Error("token expired")
-			return nil, false
-		}
-
-		userId := int(claims["user_id"].(float64))
-		if userId == 0 {
+		userId, ok := claims["user_id"].(float64)
+		if !ok || userId == 0 {
 			slog.Error("invalid user id in token")
 			return nil, false
 		}
 
-		user, ok := s.userRepository.GetById(userId)
+		user, ok := s.userRepository.GetByID((int(userId)))
 		if !ok {
 			slog.Error("user not found")
 			return nil, false
@@ -110,6 +107,7 @@ func (s *AuthService) GetUserFromToken(tokenString string) (*models.User, bool) 
 
 }
 
+// Validates the JWT token string and returns the parsed token.
 func (s *AuthService) validateToken(tokenString string) (*jwt.Token, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

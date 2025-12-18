@@ -1,3 +1,4 @@
+// User related database operations.
 package repositories
 
 import (
@@ -14,6 +15,7 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
+// Create a new user in the database.
 func (r *UserRepository) Create(user models.CreateUser) (models.User, error) {
 	query := "INSERT INTO users (email, username,password) VALUES (?, ?, ?)"
 
@@ -34,6 +36,8 @@ func (r *UserRepository) Create(user models.CreateUser) (models.User, error) {
 		Password: user.Password,
 	}, nil
 }
+
+// Retrieves a user by email.
 func (r *UserRepository) GetByEmail(email string) (*models.User, bool) {
 	query := "SELECT id, email, username, password FROM users WHERE email = ?"
 
@@ -47,7 +51,8 @@ func (r *UserRepository) GetByEmail(email string) (*models.User, bool) {
 	return &user, true
 }
 
-func (r *UserRepository) GetById(id int) (*models.User, bool) {
+// Retrieves a user by ID.
+func (r *UserRepository) GetByID(id int) (*models.User, bool) {
 	query := "SELECT id, email, username, password FROM users WHERE id = ?"
 
 	row := r.db.QueryRow(query, id)

@@ -1,3 +1,4 @@
+// This package handles the endpoints associated with the dashboard.
 package handlers
 
 import (
@@ -6,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Returns the template view for the dashboard.
 func Dashboard(c *gin.Context) {
 	user, ok := c.Get("user")
 	if !ok {
