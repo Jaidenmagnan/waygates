@@ -33,9 +33,14 @@ func main() {
 		components.Hello("Jaiden").Render(c.Request.Context(), c.Writer)
 	})
 
+	// Authentication routes.
 	r.POST("/signup", authHandler.Signup)
 	r.POST("/signin", authHandler.Signin)
-	r.POST("/signout", authHandler.Signout)
+	r.GET("/signout", authHandler.Signout)
+
+	r.GET("/signup", authHandler.SignupPage)
+	r.GET("/signin", authHandler.SigninPage)
+
 	r.GET("/dashboard", authMiddleware.AuthMiddleware(), handlers.Dashboard)
 
 	if err := r.Run(); err != nil {

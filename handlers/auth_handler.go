@@ -4,6 +4,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/Jaidenmagnan/waygates/components"
 	"github.com/Jaidenmagnan/waygates/services"
 	"github.com/gin-gonic/gin"
 )
@@ -23,13 +24,14 @@ func NewAuthHandler(authService *services.AuthService) *AuthHandler {
 // Signup handles user signup requests.
 func (h *AuthHandler) Signup(c *gin.Context) {
 	type SignUpRequest struct {
-		Email    string `json:"email" binding:"required,email"`
-		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required"`
+		Email           string `form:"email" binding:"required,email"`
+		Username        string `form:"username" binding:"required"`
+		Password        string `form:"password" binding:"required"`
+		ConfirmPassword string `form:"confirm_password" binding:"required,eqfield=Password"`
 	}
 
 	var signUpRequest SignUpRequest
-	if err := c.BindJSON(&signUpRequest); err != nil {
+	if err := c.ShouldBind(&signUpRequest); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "failed to read body",
 		})
@@ -51,21 +53,21 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 
 // Signin handles user signin requests by creating a JWT token.
 func (h *AuthHandler) Signin(c *gin.Context) {
-	type SignInRequest struct {
-		Email    string `json:"email" binding:"required,email"`
-		Password string `json:"password" binding:"required"`
+	type SigninRequest struct {
+		Email    string `form:"email" binding:"required,email"`
+		Password string `form:"password" binding:"required"`
 	}
 
-	var signInRequest SignInRequest
+	var signinRequest SigninRequest
 
-	if err := c.BindJSON(&signInRequest); err != nil {
+	if err := c.ShouldBind(&signinRequest); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "failed to read body",
 		})
 		return
 	}
 
-	user, err := h.authService.Signin(signInRequest.Email, signInRequest.Password)
+	user, err := h.authService.Signin(signinRequest.Email, signinRequest.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": err.Error(),
@@ -96,4 +98,14 @@ func (h *AuthHandler) Signout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "user signed out successfully",
 	})
+}
+
+// Renders the signup page.
+func (h *AuthHandler) SignupPage(c *gin.Context) {
+	components.SignupPage().Render(c.Request.Context(), c.Writer)
+}
+
+// Renders the signin page.
+func (h *AuthHandler) SigninPage(c *gin.Context) {
+	components.SigninPage().Render(c.Request.Context(), c.Writer)
 }
