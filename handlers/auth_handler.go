@@ -1,3 +1,5 @@
+// The path handlers/auth_handler.go implements utilities for authenticating the user and
+// interfacing with the auth service.
 package handlers
 
 import (
@@ -7,87 +9,92 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// AuthHandler handles user authentication requests.
 type AuthHandler struct {
-  authService *services.AuthService
+	authService *services.AuthService
 }
 
+// NewAuthHandler creates a new AuthHandler.
 func NewAuthHandler(authService *services.AuthService) *AuthHandler {
-  return &AuthHandler{
-    authService: authService,
-  }
+	return &AuthHandler{
+		authService: authService,
+	}
 }
 
+// Signup handles user signup requests.
 func (h *AuthHandler) Signup(c *gin.Context) {
-  type SignUpRequest struct {
-    Email   string `json:"email" binding:"required,email"`
-    Username string `json:"username" binding:"required"`
-    Password string `json:"password" binding:"required"`
-  }
+	type SignUpRequest struct {
+		Email    string `json:"email" binding:"required,email"`
+		Username string `json:"username" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
 
-  var signUpRequest SignUpRequest
-  if err := c.BindJSON(&signUpRequest); err != nil {
-    c.JSON(http.StatusBadRequest, gin.H{
-      "error": "failed to read body",
-    })
-    return
-  }
+	var signUpRequest SignUpRequest
+	if err := c.BindJSON(&signUpRequest); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "failed to read body",
+		})
+		return
+	}
 
-  user, err := h.authService.Signup(signUpRequest.Username, signUpRequest.Email, signUpRequest.Password)
-  if err != nil {
-    c.JSON(http.StatusInternalServerError, gin.H{
-      "error": err.Error(),
-    })
-    return
-  }
+	user, err := h.authService.Signup(signUpRequest.Username, signUpRequest.Email, signUpRequest.Password)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
 
-  c.JSON(http.StatusOK, gin.H{
-    "message": user,
-  })
+	c.JSON(http.StatusOK, gin.H{
+		"message": user,
+	})
 }
 
+// Signin handles user signin requests by creating a JWT token.
 func (h *AuthHandler) Signin(c *gin.Context) {
-  type SignInRequest struct {
-    Email    string `json:"email" binding:"required,email"`
-    Password string `json:"password" binding:"required"`
-  }
+	type SignInRequest struct {
+		Email    string `json:"email" binding:"required,email"`
+		Password string `json:"password" binding:"required"`
+	}
 
-  var signInRequest SignInRequest
+	var signInRequest SignInRequest
 
-  if err := c.BindJSON(&signInRequest); err != nil {
-    c.JSON(http.StatusBadRequest, gin.H{
-      "error": "failed to read body",
-    })
-    return
-  }
+	if err := c.BindJSON(&signInRequest); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "failed to read body",
+		})
+		return
+	}
 
-  user ,err := h.authService.Signin(signInRequest.Email, signInRequest.Password)
-  if err != nil {
-    c.JSON(http.StatusUnauthorized, gin.H{
-      "error": err.Error(),
-    })
-    return
-  }
+	user, err := h.authService.Signin(signInRequest.Email, signInRequest.Password)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
 
-  tokenString, err := h.authService.GenerateToken(user)
-  if err != nil {
-    c.JSON(http.StatusInternalServerError, gin.H{
-      "error": "failed to generate token",
-    })
-    return
-  }
+	tokenString, err := h.authService.GenerateToken(user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "failed to generate token",
+		})
+		return
+	}
 
-  c.SetSameSite(http.SameSiteLaxMode)
-  c.SetCookie("Authorization", tokenString, 7*24*60*60, "", "", true, true)
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie("Authorization", tokenString, 7*24*60*60, "", "", true, true)
 
-  c.JSON(http.StatusOK, gin.H{
-    "message": "user signed in successfully",
-  })
+	c.JSON(http.StatusOK, gin.H{
+		"message": "user signed in successfully",
+	})
 }
 
+// Signout handles user signout requests by clearing the Authorization cookie.
 func (h *AuthHandler) Signout(c *gin.Context) {
-  c.SetCookie("Authorization", "", -1, "", "", true, true)
+	c.SetCookie("Authorization", "", -1, "", "", true, true)
 
-  c.JSON(http.StatusOK, gin.H{
-    "message": "user signed out successfully",
-  })
+	c.JSON(http.StatusOK, gin.H{
+		"message": "user signed out successfully",
+	})
 }

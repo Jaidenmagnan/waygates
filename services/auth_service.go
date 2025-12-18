@@ -13,7 +13,7 @@ import (
 )
 
 type AuthService struct {
-	userRepository *repositories.UserRepository 
+	userRepository *repositories.UserRepository
 }
 
 func NewAuthService(userRepository *repositories.UserRepository) *AuthService {
@@ -22,12 +22,12 @@ func NewAuthService(userRepository *repositories.UserRepository) *AuthService {
 	}
 }
 
-func (s* AuthService) Signup(username string, email string, password string) (models.User, error) {
-  	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-  	if err != nil {
+func (s *AuthService) Signup(username string, email string, password string) (models.User, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
 		slog.Error("failed to hash password", "error", err)
 		return models.User{}, err
-  	}
+	}
 
 	user, err := s.userRepository.Create(models.CreateUser{
 		Username: username,
@@ -42,8 +42,8 @@ func (s* AuthService) Signup(username string, email string, password string) (mo
 	return user, nil
 }
 
-func (s* AuthService) Signin(email string, password string) (*models.User, error) {
-  	user, ok := s.userRepository.GetByEmail(email)
+func (s *AuthService) Signin(email string, password string) (*models.User, error) {
+	user, ok := s.userRepository.GetByEmail(email)
 	if !ok {
 		slog.Error("failed to get user by email")
 		return nil, errors.New("invalid email or password")
@@ -51,13 +51,14 @@ func (s* AuthService) Signin(email string, password string) (*models.User, error
 
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return nil, errors.New("invalid email or password")
+		slog.Error("invalid password", "error", err)
+		return nil, err
 	}
 
 	return user, nil
 }
 
-func (s* AuthService) GenerateToken(user *models.User) (string, error) {
+func (s *AuthService) GenerateToken(user *models.User) (string, error) {
 	expTime := jwt.NewNumericDate(jwt.TimeFunc().Add(7 * 24 * time.Hour))
 	claims := jwt.MapClaims{
 		"user_id": user.ID,
@@ -68,15 +69,17 @@ func (s* AuthService) GenerateToken(user *models.User) (string, error) {
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
+		slog.Error("failed to sign token", "error", err)
 		return "", err
 	}
 
 	return tokenString, nil
 }
 
-func (s* AuthService) GetUserFromToken(tokenString string) (*models.User, bool) {
+func (s *AuthService) GetUserFromToken(tokenString string) (*models.User, bool) {
 	token, err := s.validateToken(tokenString)
 	if err != nil {
+		slog.Error("failed to validate token", "error", err)
 		return nil, false
 	}
 
@@ -99,7 +102,7 @@ func (s* AuthService) GetUserFromToken(tokenString string) (*models.User, bool) 
 			return nil, false
 		}
 
-		return user, true;
+		return user, true
 	} else {
 		slog.Error("invalid token claims")
 		return nil, false
@@ -107,15 +110,17 @@ func (s* AuthService) GetUserFromToken(tokenString string) (*models.User, bool) 
 
 }
 
-func (s* AuthService) validateToken(tokenString string) (*jwt.Token, error) {
+func (s *AuthService) validateToken(tokenString string) (*jwt.Token, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			slog.Error("unexpected signing method")
 			return nil, errors.New("unexpected signing method")
 		}
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
 
 	if err != nil {
+		slog.Error("failed to parse token", "error", err)
 		return nil, err
 	}
 

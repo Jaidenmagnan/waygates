@@ -7,33 +7,32 @@ import (
 )
 
 type UserRepository struct {
-    db *sql.DB
+	db *sql.DB
 }
 
 func NewUserRepository(db *sql.DB) *UserRepository {
-    return &UserRepository{db: db}
+	return &UserRepository{db: db}
 }
 
-
 func (r *UserRepository) Create(user models.CreateUser) (models.User, error) {
-    query := "INSERT INTO users (email, username,password) VALUES (?, ?, ?)"
-    
-    result, err := r.db.Exec(query, user.Email, user.Username, user.Password)
-    if err != nil {
-        return models.User{}, err
-    }
-    
-    id, err := result.LastInsertId()
-    if err != nil {
-        return models.User{}, err
-    }
+	query := "INSERT INTO users (email, username,password) VALUES (?, ?, ?)"
 
-    return models.User{
-        ID:       int(id),
-        Email:    user.Email,
-        Username: user.Username,
-        Password: user.Password,
-    }, nil
+	result, err := r.db.Exec(query, user.Email, user.Username, user.Password)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return models.User{
+		ID:       int(id),
+		Email:    user.Email,
+		Username: user.Username,
+		Password: user.Password,
+	}, nil
 }
 func (r *UserRepository) GetByEmail(email string) (*models.User, bool) {
 	query := "SELECT id, email, username, password FROM users WHERE email = ?"
@@ -52,7 +51,7 @@ func (r *UserRepository) GetById(id int) (*models.User, bool) {
 	query := "SELECT id, email, username, password FROM users WHERE id = ?"
 
 	row := r.db.QueryRow(query, id)
-	
+
 	var user models.User
 	if err := row.Scan(&user.ID, &user.Email, &user.Username, &user.Password); err != nil {
 		return nil, false
