@@ -1,0 +1,16 @@
+package components
+import "github.com/Jaidenmagnan/waygates/models"
+
+templ WaygateCard(waygate models.Waygate) {
+    <div class="waygate-card">
+        <h3>{ waygate.Name }</h3>
+        <p>{ waygate.ID }</p>
+    </div>
+}
+
+templ WaygatePage(waygate models.Waygate) {
+    @BaseLayout("Waygates") {
+        <h1>Your Waygate</h1>
+        @WaygateCard(waygate)
+    }
+}

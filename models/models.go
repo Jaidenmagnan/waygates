@@ -13,3 +13,14 @@ type User struct {
 	Email    string
 	Password string
 }
+
+type CreateWaygate struct {
+	Name   string
+	UserId int
+}
+
+type Waygate struct {
+	ID     int
+	Name   string
+	UserId int
+}

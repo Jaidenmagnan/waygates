@@ -79,30 +79,30 @@ func (s *AuthService) GenerateToken(user *models.User) (string, error) {
 }
 
 // Retrieves a user from the provided JWT token.
-func (s *AuthService) GetUserFromToken(tokenString string) (*models.User, bool) {
+func (s *AuthService) GetUserFromToken(tokenString string) (models.User, bool) {
 	token, err := s.validateToken(tokenString)
 	if err != nil {
 		slog.Error("failed to validate token", "error", err)
-		return nil, false
+		return models.User{}, false
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		userId, ok := claims["user_id"].(float64)
 		if !ok || userId == 0 {
 			slog.Error("invalid user id in token")
-			return nil, false
+			return models.User{}, false
 		}
 
 		user, ok := s.userRepository.GetByID((int(userId)))
 		if !ok {
 			slog.Error("user not found")
-			return nil, false
+			return models.User{}, false
 		}
 
 		return user, true
 	} else {
 		slog.Error("invalid token claims")
-		return nil, false
+		return models.User{}, false
 	}
 
 }

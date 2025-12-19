@@ -20,10 +20,13 @@ func main() {
 	defer db.DB.Close()
 
 	userRepository := repositories.NewUserRepository(db.DB)
+	waygateRepository := repositories.NewWaygateRepository(db.DB)
 
 	authService := services.NewAuthService(userRepository)
+	waygateService := services.NewWaygateService(waygateRepository)
 
 	authHandler := handlers.NewAuthHandler(authService)
+	waygateHandler := handlers.NewWaygateHandler(waygateService)
 
 	authMiddleware := middleware.NewAuthMiddleware(authService)
 
@@ -36,12 +39,21 @@ func main() {
 	// Authentication routes.
 	r.POST("/signup", authHandler.Signup)
 	r.POST("/signin", authHandler.Signin)
-	r.GET("/signout", authHandler.Signout)
+	r.POST("/signout", authHandler.Signout)
 
-	r.GET("/signup", authHandler.SignupPage)
-	r.GET("/signin", authHandler.SigninPage)
+	// User routes.
+	r.GET("/user/:id/waygates", waygateHandler.ListUserWaygates)
 
-	r.GET("/dashboard", authMiddleware.AuthMiddleware(), handlers.Dashboard)
+	// Waygate routes.
+	r.POST("/waygate/create", authMiddleware.AuthMiddleware(), waygateHandler.CreateWaygate)
+	r.POST("/waygate/:id/delete", authMiddleware.AuthMiddleware(), waygateHandler.DeleteWaygate)
+
+	r.GET("/waygate/:id/view", authMiddleware.AuthMiddleware(), waygateHandler.WaygatePage)
+
+	r.GET("/signup", authMiddleware.SigninAndSignupMiddleware(), authHandler.SignupPage)
+	r.GET("/signin", authMiddleware.SigninAndSignupMiddleware(), authHandler.SigninPage)
+
+	r.GET("/", authMiddleware.AuthMiddleware(), handlers.Dashboard)
 
 	if err := r.Run(); err != nil {
 		log.Fatalf("failed to run server: %v", err)

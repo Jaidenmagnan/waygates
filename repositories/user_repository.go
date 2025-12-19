@@ -52,15 +52,15 @@ func (r *UserRepository) GetByEmail(email string) (*models.User, bool) {
 }
 
 // Retrieves a user by ID.
-func (r *UserRepository) GetByID(id int) (*models.User, bool) {
+func (r *UserRepository) GetByID(id int) (models.User, bool) {
 	query := "SELECT id, email, username, password FROM users WHERE id = ?"
 
 	row := r.db.QueryRow(query, id)
 
 	var user models.User
 	if err := row.Scan(&user.ID, &user.Email, &user.Username, &user.Password); err != nil {
-		return nil, false
+		return models.User{}, false
 	}
 
-	return &user, true
+	return user, true
 }

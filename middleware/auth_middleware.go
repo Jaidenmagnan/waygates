@@ -2,6 +2,8 @@
 package middleware
 
 import (
+	"net/http"
+
 	"github.com/Jaidenmagnan/waygates/services"
 	"github.com/gin-gonic/gin"
 )
@@ -21,21 +23,38 @@ func (m *AuthMiddleware) AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString, err := c.Cookie("Authorization")
 		if err != nil || tokenString == "" {
-			c.AbortWithStatusJSON(401, gin.H{
-				"error": "unauthorized",
-			})
+			c.Redirect(http.StatusFound, "/signin")
+			c.Abort()
 			return
 		}
 
 		user, ok := m.authService.GetUserFromToken(tokenString)
 		if !ok {
-			c.AbortWithStatusJSON(401, gin.H{
-				"error": "unauthorized",
-			})
+			c.Redirect(http.StatusFound, "/signin")
+			c.Abort()
 			return
 		}
 
 		c.Set("user", user)
 		c.Next()
+	}
+}
+
+// This middleware redirects authenticated users away from signin and signup pages.
+func (m *AuthMiddleware) SigninAndSignupMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenString, err := c.Cookie("Authorization")
+		if err != nil || tokenString == "" {
+			c.Next()
+			return
+		}
+
+		_, ok := m.authService.GetUserFromToken(tokenString)
+		if !ok {
+			c.Next()
+			return
+		}
+
+		c.Redirect(http.StatusFound, "/")
 	}
 }

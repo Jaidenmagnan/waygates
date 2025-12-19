@@ -84,20 +84,17 @@ func (h *AuthHandler) Signin(c *gin.Context) {
 	}
 
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("Authorization", tokenString, 7*24*60*60, "", "", true, true)
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "user signed in successfully",
-	})
+	c.SetCookie("Authorization", tokenString, 7*24*60*60, "/", "", true, true)
+	c.Header("HX-Redirect", "/")
+	c.Status(http.StatusOK)
 }
 
 // Signout handles user signout requests by clearing the Authorization cookie.
 func (h *AuthHandler) Signout(c *gin.Context) {
 	c.SetCookie("Authorization", "", -1, "", "", true, true)
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "user signed out successfully",
-	})
+	c.Header("HX-Redirect", "/signin")
+	c.Status(http.StatusOK)
 }
 
 // Renders the signup page.
