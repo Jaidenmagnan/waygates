@@ -49,7 +49,7 @@ func (r *WaygateRepository) GetByID(id int) (models.Waygate, error) {
 }
 
 // Deletes a waygate by ID.
-func (r *WaygateRepository) DeleteByID(id int) error {
+func (r *WaygateRepository) Delete(id int) error {
 	query := "DELETE FROM waygates WHERE id = ?"
 
 	_, err := r.db.Exec(query, id)

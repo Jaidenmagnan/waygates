@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Jaidenmagnan/waygates/components"
 	"github.com/Jaidenmagnan/waygates/models"
 	"github.com/Jaidenmagnan/waygates/services"
 	"github.com/gin-gonic/gin"
@@ -50,13 +49,30 @@ func (h *WaygateHandler) CreateWaygate(c *gin.Context) {
 }
 
 // View a waygate.
-func (h *WaygateHandler) WaygatePage(c *gin.Context) {
+func (h *WaygateHandler) ViewWaygate(c *gin.Context) {
 	waygateID := c.Param("id")
 
 	waygateIdInt, err := strconv.Atoi(waygateID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid waygate id",
+		})
+		return
+	}
+
+	user := c.MustGet("user").(models.User)
+
+	canAccess, err := h.WaygateService.CanUserAccessWaygate(user.ID, waygateIdInt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	if !canAccess {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "you do not have permission to view this waygate",
 		})
 		return
 	}
@@ -69,7 +85,9 @@ func (h *WaygateHandler) WaygatePage(c *gin.Context) {
 		return
 	}
 
-	components.WaygatePage(waygate).Render(c.Request.Context(), c.Writer)
+	c.JSON(http.StatusOK, gin.H{
+		"waygate": waygate,
+	})
 }
 
 // List all waygates for a user.
@@ -90,5 +108,42 @@ func (h *WaygateHandler) ListUserWaygates(c *gin.Context) {
 }
 
 func (h *WaygateHandler) DeleteWaygate(c *gin.Context) {
+	waygateID := c.Param("id")
 
+	waygateIdInt, err := strconv.Atoi(waygateID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid waygate id",
+		})
+		return
+	}
+
+	user := c.MustGet("user").(models.User)
+
+	canAccess, err := h.WaygateService.CanUserAccessWaygate(user.ID, waygateIdInt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	if !canAccess {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "you do not have permission to delete this waygate",
+		})
+		return
+	}
+
+	err = h.WaygateService.DeleteWaygate(waygateIdInt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "waygate deleted successfully",
+	})
 }

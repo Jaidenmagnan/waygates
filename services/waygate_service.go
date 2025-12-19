@@ -31,3 +31,20 @@ func (s *WaygateService) GetWaygateByID(id int) (models.Waygate, error) {
 func (s *WaygateService) ListUserWaygates(userId int) ([]models.Waygate, error) {
 	return s.waygateRepository.GetByUserID(userId)
 }
+
+func (s *WaygateService) DeleteWaygate(id int) error {
+	return s.waygateRepository.Delete(id)
+}
+
+func (s *WaygateService) CanUserAccessWaygate(userId, waygateId int) (bool, error) {
+	waygate, err := s.waygateRepository.GetByID(waygateId)
+	if err != nil {
+		return false, err
+	}
+
+	if waygate.UserId != userId {
+		return false, nil
+	}
+
+	return true, nil
+}

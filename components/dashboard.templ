@@ -4,7 +4,7 @@ import "github.com/Jaidenmagnan/waygates/models"
 
 templ Dashboard(user models.User) {
     @BaseLayout("Dashboard") {
-        <button hx-post="/signout">Sign Out</button>
+        <button hx-post="/auth/signout">Sign Out</button>
         <h1>Welcome to your Dashboard</h1>
         <h2>Hello, { user.Username }!</h2>
         <p>This is where you can manage your account and view your activities.</p>

@@ -1,0 +1,16 @@
+meta {
+  name: Delete Waygate
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://localhost:8080/waygate/1/delete
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

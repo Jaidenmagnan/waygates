@@ -1,0 +1,24 @@
+meta {
+  name: signup
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/auth/signup
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "jmoney8@gmail.com",
+    "username": "user2",
+    "password": "password"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

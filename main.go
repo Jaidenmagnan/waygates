@@ -37,22 +37,28 @@ func main() {
 	})
 
 	// Authentication routes.
-	r.POST("/signup", authHandler.Signup)
-	r.POST("/signin", authHandler.Signin)
-	r.POST("/signout", authHandler.Signout)
+	auth := r.Group("/auth")
+	{
+		auth.POST("/signup", authHandler.Signup)
+		auth.POST("/signin", authHandler.Signin)
+		auth.POST("/signout", authHandler.Signout)
+	}
 
-	// User routes.
-	r.GET("/user/:id/waygates", waygateHandler.ListUserWaygates)
+	api := r.Group("/api", authMiddleware.AuthMiddleware())
+	{
+		waygates := api.Group("/waygates")
+		{
+			// Waygate routes.
+			waygates.GET("/", waygateHandler.ListUserWaygates)
+			waygates.POST("/", waygateHandler.CreateWaygate)
+			waygates.DELETE("/:id", waygateHandler.DeleteWaygate)
 
-	// Waygate routes.
-	r.POST("/waygate/create", authMiddleware.AuthMiddleware(), waygateHandler.CreateWaygate)
-	r.POST("/waygate/:id/delete", authMiddleware.AuthMiddleware(), waygateHandler.DeleteWaygate)
-
-	r.GET("/waygate/:id/view", authMiddleware.AuthMiddleware(), waygateHandler.WaygatePage)
+			waygates.GET("/:id", waygateHandler.ViewWaygate)
+		}
+	}
 
 	r.GET("/signup", authMiddleware.SigninAndSignupMiddleware(), authHandler.SignupPage)
 	r.GET("/signin", authMiddleware.SigninAndSignupMiddleware(), authHandler.SigninPage)
-
 	r.GET("/", authMiddleware.AuthMiddleware(), handlers.Dashboard)
 
 	if err := r.Run(); err != nil {

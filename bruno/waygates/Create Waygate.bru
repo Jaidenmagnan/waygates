@@ -1,0 +1,22 @@
+meta {
+  name: Create Waygate
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8080/api/waygates
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "This is my third waygate"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
