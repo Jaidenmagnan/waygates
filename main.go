@@ -27,6 +27,7 @@ func main() {
 
 	authHandler := handlers.NewAuthHandler(authService)
 	waygateHandler := handlers.NewWaygateHandler(waygateService)
+	dashboardHandler := handlers.NewDashboardHandler(waygateService)
 
 	authMiddleware := middleware.NewAuthMiddleware(authService)
 
@@ -59,7 +60,7 @@ func main() {
 
 	r.GET("/signup", authMiddleware.SigninAndSignupMiddleware(), authHandler.SignupPage)
 	r.GET("/signin", authMiddleware.SigninAndSignupMiddleware(), authHandler.SigninPage)
-	r.GET("/", authMiddleware.AuthMiddleware(), handlers.Dashboard)
+	r.GET("/", authMiddleware.AuthMiddleware(), dashboardHandler.Dashboard)
 
 	if err := r.Run(); err != nil {
 		log.Fatalf("failed to run server: %v", err)

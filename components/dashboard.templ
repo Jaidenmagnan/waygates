@@ -1,12 +1,33 @@
-package components
+package components 
 
 import "github.com/Jaidenmagnan/waygates/models"
+import "fmt"
 
-templ Dashboard(user models.User) {
+templ CreateWaygateForm() {
+    <form hx-boost="true" method="POST" action="/api/waygates">
+        <input type="text" name="name" placeholder="Waygate Name" required />
+        <button type="submit">Create Waygate</button>
+    </form>
+
+}
+
+templ WaygatesList(waygates []models.Waygate) {
+    <ul>
+        for _, wg := range waygates {
+            <li>
+            { wg.Name }
+            <a href={fmt.Sprintf("/api/waygates/%d", wg.ID)}>View</a>
+            </li>
+        }
+    </ul>
+}
+
+templ Dashboard(user models.User, waygates []models.Waygate) {
     @BaseLayout("Dashboard") {
         <button hx-post="/auth/signout">Sign Out</button>
         <h1>Welcome to your Dashboard</h1>
         <h2>Hello, { user.Username }!</h2>
-        <p>This is where you can manage your account and view your activities.</p>
+        @CreateWaygateForm()
+        @WaygatesList(waygates)
     }
 }
