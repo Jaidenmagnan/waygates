@@ -55,12 +55,24 @@ func main() {
 			waygates.DELETE("/:id", waygateHandler.DeleteWaygate)
 
 			waygates.GET("/:id", waygateHandler.ViewWaygate)
+
+			links := waygates.Group("/:waygate_id/links")
+			{
+				links.POST("/", waygateHandler.ListLinks)
+				links.DELETE("/:id", waygateHandler.DeleteLink)
+			}
 		}
+
 	}
 
 	r.GET("/signup", authMiddleware.SigninAndSignupMiddleware(), authHandler.SignupPage)
 	r.GET("/signin", authMiddleware.SigninAndSignupMiddleware(), authHandler.SigninPage)
 	r.GET("/", authMiddleware.AuthMiddleware(), dashboardHandler.Dashboard)
+
+	waygates := r.Group("/waygates", authMiddleware.AuthMiddleware())
+	{
+		waygates.GET("/:id", dashboardHandler.ViewWaygate)
+	}
 
 	if err := r.Run(); err != nil {
 		log.Fatalf("failed to run server: %v", err)

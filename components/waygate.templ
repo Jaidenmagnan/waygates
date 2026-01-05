@@ -1,0 +1,10 @@
+package components
+import "github.com/Jaidenmagnan/waygates/models"
+
+templ Waygate(waygate models.Waygate) {
+    <div class="waygate-detail">
+        <h2>{ waygate.Name }</h2>
+        <p>ID: { waygate.ID }</p>
+    </div>
+    <a href="/">back</a>
+}

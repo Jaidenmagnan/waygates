@@ -16,7 +16,7 @@ templ WaygatesList(waygates []models.Waygate) {
         for _, wg := range waygates {
             <li>
             { wg.Name }
-            <a href={fmt.Sprintf("/api/waygates/%d", wg.ID)}>View</a>
+            <a href={fmt.Sprintf("/waygates/%d", wg.ID)}>View</a>
             </li>
         }
     </ul>

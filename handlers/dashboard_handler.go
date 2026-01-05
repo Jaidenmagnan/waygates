@@ -3,6 +3,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/Jaidenmagnan/waygates/components"
 	"github.com/Jaidenmagnan/waygates/models"
@@ -37,4 +38,24 @@ func (h *DashboardHandler) Dashboard(c *gin.Context) {
 	}
 
 	components.Dashboard(user, s).Render(c.Request.Context(), c.Writer)
+}
+
+func (h *DashboardHandler) ViewWaygate(c *gin.Context) {
+	waygateID := c.Param("id")
+
+	waygateIDInt, err := strconv.Atoi(waygateID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid waygate id",
+		})
+		return
+	}
+
+	waygate, err := h.waygateService.GetWaygateByID(waygateIDInt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load waygate"})
+		return
+	}
+
+	components.Waygate(waygate).Render(c.Request.Context(), c.Writer)
 }
