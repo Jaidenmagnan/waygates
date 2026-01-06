@@ -24,3 +24,16 @@ type Waygate struct {
 	Name   string
 	UserId int
 }
+
+type CreateWaygateLink struct {
+	Name      string
+	Link      string
+	WaygateId int
+}
+
+type WaygateLink struct {
+	ID        int
+	Name      string
+	Link      string
+	WaygateId int
+}

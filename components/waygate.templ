@@ -1,10 +1,49 @@
 package components
-import "github.com/Jaidenmagnan/waygates/models"
+import ("github.com/Jaidenmagnan/waygates/models"
+    "fmt")
 
-templ Waygate(waygate models.Waygate) {
+templ CreateWaygateLinkForm(waygate_id int) {
+    <form hx-boost="true" method="POST" action={fmt.Sprintf("/api/waygates/%d/links", waygate_id)}>
+
+    <input type="text" name="name" placeholder="link name" required/>
+    <input type="text" name="link" placeholder="link" required />
+    <input type="hidden" name="waygate_id" value={fmt.Sprintf("%d", waygate_id)}>
+    <button type="submit">Create Link</button>
+    </form>
+}
+
+templ ListWaygateLinks(waygate_id int, waygateLinks []models.WaygateLink) {
+    <ul>
+        for _, wgl := range waygateLinks {
+            <li>
+            { wgl.Name }
+            <button 
+                    hx-delete={ fmt.Sprintf("/api/waygates/%d/links/%d", waygate_id, wgl.ID) }
+                    hx-trigger="click"
+                    hx-target="closest li"
+                    hx-swap="outerHTML"
+                    type="submit"
+                    >
+                    Delete
+            </button>
+            <button>
+                Copy
+            </button>
+            </li>   
+        }
+    </ul>
+}
+
+templ Waygate(waygate models.Waygate, waygateLinks []models.WaygateLink) {
+    @BaseLayout("Waygate") {
     <div class="waygate-detail">
         <h2>{ waygate.Name }</h2>
         <p>ID: { waygate.ID }</p>
+        @CreateWaygateLinkForm(waygate.ID)
+        @ListWaygateLinks(waygate.ID, waygateLinks)
     </div>
     <a href="/">back</a>
+
+    }
+
 }

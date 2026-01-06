@@ -10,12 +10,12 @@ import (
 )
 
 type WaygateHandler struct {
-	WaygateService *services.WaygateService
+	waygateService *services.WaygateService
 }
 
 func NewWaygateHandler(waygateService *services.WaygateService) *WaygateHandler {
 	return &WaygateHandler{
-		WaygateService: waygateService,
+		waygateService: waygateService,
 	}
 }
 
@@ -35,7 +35,7 @@ func (h *WaygateHandler) CreateWaygate(c *gin.Context) {
 		return
 	}
 
-	waygate, err := h.WaygateService.CreateWaygate(createWaygateRequest.Name, user.ID)
+	waygate, err := h.waygateService.CreateWaygate(createWaygateRequest.Name, user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -50,7 +50,7 @@ func (h *WaygateHandler) CreateWaygate(c *gin.Context) {
 
 // View a waygate.
 func (h *WaygateHandler) ViewWaygate(c *gin.Context) {
-	waygateID := c.Param("id")
+	waygateID := c.Param("waygate_id")
 
 	waygateIdInt, err := strconv.Atoi(waygateID)
 	if err != nil {
@@ -62,7 +62,7 @@ func (h *WaygateHandler) ViewWaygate(c *gin.Context) {
 
 	user := c.MustGet("user").(models.User)
 
-	canAccess, err := h.WaygateService.CanUserAccessWaygate(user.ID, waygateIdInt)
+	canAccess, err := h.waygateService.CanUserAccessWaygate(user.ID, waygateIdInt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -77,7 +77,7 @@ func (h *WaygateHandler) ViewWaygate(c *gin.Context) {
 		return
 	}
 
-	waygate, err := h.WaygateService.GetWaygateByID(waygateIdInt)
+	waygate, err := h.waygateService.GetWaygateByID(waygateIdInt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -94,7 +94,7 @@ func (h *WaygateHandler) ViewWaygate(c *gin.Context) {
 func (h *WaygateHandler) ListUserWaygates(c *gin.Context) {
 	user := c.MustGet("user").(models.User)
 
-	waygates, err := h.WaygateService.ListUserWaygates(user.ID)
+	waygates, err := h.waygateService.ListUserWaygates(user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -108,7 +108,7 @@ func (h *WaygateHandler) ListUserWaygates(c *gin.Context) {
 }
 
 func (h *WaygateHandler) DeleteWaygate(c *gin.Context) {
-	waygateID := c.Param("id")
+	waygateID := c.Param("waygate_id")
 
 	waygateIdInt, err := strconv.Atoi(waygateID)
 	if err != nil {
@@ -120,7 +120,7 @@ func (h *WaygateHandler) DeleteWaygate(c *gin.Context) {
 
 	user := c.MustGet("user").(models.User)
 
-	canAccess, err := h.WaygateService.CanUserAccessWaygate(user.ID, waygateIdInt)
+	canAccess, err := h.waygateService.CanUserAccessWaygate(user.ID, waygateIdInt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -135,7 +135,7 @@ func (h *WaygateHandler) DeleteWaygate(c *gin.Context) {
 		return
 	}
 
-	err = h.WaygateService.DeleteWaygate(waygateIdInt)
+	err = h.waygateService.DeleteWaygate(waygateIdInt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),

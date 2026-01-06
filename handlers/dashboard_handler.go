@@ -12,12 +12,14 @@ import (
 )
 
 type DashboardHandler struct {
-	waygateService *services.WaygateService
+	waygateService     *services.WaygateService
+	waygateLinkService *services.WaygateLinkService
 }
 
-func NewDashboardHandler(waygateService *services.WaygateService) *DashboardHandler {
+func NewDashboardHandler(waygateService *services.WaygateService, waygateLinkService *services.WaygateLinkService) *DashboardHandler {
 	return &DashboardHandler{
-		waygateService: waygateService,
+		waygateService:     waygateService,
+		waygateLinkService: waygateLinkService,
 	}
 }
 
@@ -57,5 +59,11 @@ func (h *DashboardHandler) ViewWaygate(c *gin.Context) {
 		return
 	}
 
-	components.Waygate(waygate).Render(c.Request.Context(), c.Writer)
+	waygateLinks, err := h.waygateLinkService.ListWaygateLinks(waygate.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load waygate"})
+		return
+	}
+
+	components.Waygate(waygate, waygateLinks).Render(c.Request.Context(), c.Writer)
 }
