@@ -4,30 +4,53 @@ import "github.com/Jaidenmagnan/waygates/models"
 import "fmt"
 
 templ CreateWaygateForm() {
-    <form hx-boost="true" method="POST" action="/api/waygates">
-        <input type="text" name="name" placeholder="Waygate Name" required />
-        <button type="submit">Create Waygate</button>
+    <form method="POST" action="/api/waygates/">
+        <label for="name">Ring name</label>
+        <input type="text" id="name" name="name" placeholder="Saturday night links" required/>
+        <button type="submit">Create Ring</button>
     </form>
 
 }
 
 templ WaygatesList(waygates []models.Waygate) {
-    <ul>
-        for _, wg := range waygates {
-            <li>
-            { wg.Name }
-            <a href={fmt.Sprintf("/waygates/%d", wg.ID)}>View</a>
-            </li>
-        }
-    </ul>
+    if len(waygates) == 0 {
+        <p class="muted">No rings yet. Mark a path for your friends' sites.</p>
+    } else {
+        <div class="grid">
+            for _, wg := range waygates {
+                <article class="ring-card">
+                    <h3>{ wg.Name }</h3>
+                    <p class="muted">Waygate #{ fmt.Sprintf("%d", wg.ID) }</p>
+                    <div class="actions">
+                        <a class="button" href={fmt.Sprintf("/waygates/%d", wg.ID)}>Open</a>
+                        <form method="POST" action={fmt.Sprintf("/api/waygates/%d/delete", wg.ID)}>
+                            <button class="danger" type="submit">Delete</button>
+                        </form>
+                    </div>
+                </article>
+            }
+        </div>
+    }
 }
 
 templ Dashboard(user models.User, waygates []models.Waygate) {
     @BaseLayout("Dashboard") {
-        <button hx-post="/auth/signout">Sign Out</button>
-        <h1>Welcome to your Dashboard</h1>
-        <h2>Hello, { user.Username }!</h2>
-        @CreateWaygateForm()
-        @WaygatesList(waygates)
+        <div class="toolbar">
+            <div>
+                <h1>Your rings</h1>
+                <p class="muted">Hello, { user.Username }. Build a quiet path between indie sites.</p>
+            </div>
+            <form method="POST" action="/auth/signout">
+                <button type="submit">Sign Out</button>
+            </form>
+        </div>
+        <section class="panel">
+            <h2>New web ring</h2>
+            @CreateWaygateForm()
+        </section>
+        <section>
+            <h2>Existing rings</h2>
+            @WaygatesList(waygates)
+        </section>
     }
 }

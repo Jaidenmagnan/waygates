@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/Jaidenmagnan/waygates/components"
 	"github.com/Jaidenmagnan/waygates/db"
 	"github.com/Jaidenmagnan/waygates/handlers"
 	"github.com/Jaidenmagnan/waygates/middleware"
@@ -52,11 +53,13 @@ func main() {
 			waygates.POST("/", waygateHandler.CreateWaygate)
 			waygates.GET("/:waygate_id", waygateHandler.ViewWaygate)
 			waygates.DELETE("/:waygate_id", waygateHandler.DeleteWaygate)
+			waygates.POST("/:waygate_id/delete", waygateHandler.DeleteWaygateFromForm)
 
 			links := waygates.Group("/:waygate_id/links")
 			{
 				links.POST("/", waygateLinkHandler.CreateWaygateLink)
 				links.DELETE("/:waygate_link_id", waygateLinkHandler.DeleteWaygateLink)
+				links.POST("/:waygate_link_id/delete", waygateLinkHandler.DeleteWaygateLink)
 			}
 
 		}
@@ -71,6 +74,13 @@ func main() {
 	{
 		waygates.GET("/:id", dashboardHandler.ViewWaygate)
 	}
+
+	r.GET("/rings/:waygate_id/:waygate_link_id/next", waygateLinkHandler.RedirectToNext)
+	r.GET("/rings/:waygate_id/:waygate_link_id/previous", waygateLinkHandler.RedirectToPrevious)
+	r.NoRoute(func(c *gin.Context) {
+		c.Status(404)
+		components.ErrorPage(404, "No gate here", "This path does not lead to a page on Waygates.").Render(c.Request.Context(), c.Writer)
+	})
 
 	if err := r.Run(); err != nil {
 		log.Fatalf("failed to run server: %v", err)

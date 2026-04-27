@@ -30,9 +30,10 @@ func (r *WaygateLinkRepository) Create(waygateLink models.CreateWaygateLink) (mo
 	}
 
 	return models.WaygateLink{
-		ID:   int(id),
-		Name: waygateLink.Name,
-		Link: waygateLink.Link,
+		ID:        int(id),
+		Name:      waygateLink.Name,
+		Link:      waygateLink.Link,
+		WaygateId: waygateLink.WaygateId,
 	}, nil
 
 }
@@ -49,7 +50,7 @@ func (r *WaygateLinkRepository) Delete(id int) error {
 
 // Get all links for a waygate ID.
 func (r *WaygateLinkRepository) GetByWaygateID(waygateID int) ([]models.WaygateLink, error) {
-	query := "SELECT id, name, link FROM waygate_links WHERE waygate_id = ?"
+	query := "SELECT id, name, link, waygate_id FROM waygate_links WHERE waygate_id = ?"
 
 	rows, err := r.db.Query(query, waygateID)
 	if err != nil {
@@ -60,15 +61,16 @@ func (r *WaygateLinkRepository) GetByWaygateID(waygateID int) ([]models.WaygateL
 	var waygates []models.WaygateLink
 	for rows.Next() {
 		var waygateLink models.WaygateLink
-		if err := rows.Scan(&waygateLink.ID, &waygateLink.Name, &waygateLink.Link); err != nil {
+		if err := rows.Scan(&waygateLink.ID, &waygateLink.Name, &waygateLink.Link, &waygateLink.WaygateId); err != nil {
 			return nil, err
 		}
 		waygates = append(waygates, waygateLink)
-
-		sort.Slice(waygates, func(i, j int) bool {
-			return waygates[i].Name <= waygates[j].Name
-		})
 	}
+
+	sort.Slice(waygates, func(i, j int) bool {
+		return waygates[i].Name <= waygates[j].Name
+	})
+
 	return waygates, nil
 }
 

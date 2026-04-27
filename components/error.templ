@@ -1,0 +1,17 @@
+package components
+
+import "fmt"
+
+templ ErrorPage(status int, title string, message string) {
+	@BaseLayout(title) {
+		<section class="panel error-panel">
+			<p class="kicker">Waygate signal { fmt.Sprintf("%d", status) }</p>
+			<h1>{ title }</h1>
+			<p>{ message }</p>
+			<div class="actions">
+				<a class="button" href="/">Return Home</a>
+				<a href="/signin">Sign In</a>
+			</div>
+		</section>
+	}
+}

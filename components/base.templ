@@ -6,12 +6,196 @@ templ BaseLayout(title string) {
 	<html>
 		<head>
 			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<title>{ title }</title>
-            <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js" integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz" crossorigin="anonymous"></script>
+			<style>
+				:root {
+					--ink: #211c16;
+					--paper: #f4ead2;
+					--card: #fff9e8;
+					--line: rgba(44, 38, 30, .18);
+					--stone: #59615a;
+					--moss: #456b4b;
+					--blue: #315b80;
+					--gold: #c89028;
+					--ember: #9f3f2f;
+					--border: #2c261e;
+				}
+
+				* { box-sizing: border-box; }
+
+				body {
+					margin: 0;
+					color: var(--ink);
+					background:
+						linear-gradient(180deg, rgba(255, 253, 245, .7), rgba(244, 234, 210, .8)),
+						radial-gradient(circle at 20% 0%, rgba(200, 144, 40, .09), transparent 34rem),
+						radial-gradient(circle at 85% 12%, rgba(49, 91, 128, .08), transparent 28rem),
+						var(--paper);
+					font-family: Georgia, "Times New Roman", serif;
+					line-height: 1.45;
+				}
+
+				a { color: var(--blue); font-weight: 700; }
+				a:hover { color: #54221b; text-decoration-thickness: 2px; }
+
+				.site-shell {
+					width: min(980px, calc(100% - 28px));
+					margin: 28px auto 48px;
+					border: 1px solid var(--line);
+					background: rgba(255, 249, 232, .92);
+					box-shadow: 0 18px 45px rgba(33, 28, 22, .08);
+				}
+
+				.site-header, .site-footer {
+					padding: 16px 22px;
+					background: rgba(255, 249, 232, .55);
+					border-bottom: 1px solid var(--line);
+				}
+
+				.site-footer {
+					border-top: 1px solid var(--line);
+					border-bottom: 0;
+					background: rgba(255, 249, 232, .42);
+					font-size: .92rem;
+				}
+
+				.brand {
+					display: flex;
+					align-items: baseline;
+					justify-content: space-between;
+					gap: 14px;
+					flex-wrap: wrap;
+				}
+
+				.brand a {
+					color: var(--ink);
+					font-size: clamp(1.5rem, 4vw, 2.2rem);
+					text-decoration: none;
+					text-shadow: none;
+				}
+
+				main { padding: 24px 22px 28px; }
+				h1, h2, h3 { line-height: 1.1; margin: 0 0 12px; }
+				h1 { font-size: clamp(1.9rem, 5vw, 3.1rem); font-weight: 500; }
+				h2 { font-size: clamp(1.25rem, 3vw, 1.75rem); font-weight: 500; }
+				h3 { font-weight: 500; }
+				p { margin: 0 0 14px; }
+
+				.toolbar {
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+					gap: 14px;
+					flex-wrap: wrap;
+					margin-bottom: 22px;
+				}
+
+				.panel, .ring-card, .member {
+					border: 1px solid var(--line);
+					background: rgba(255, 253, 245, .62);
+					padding: 18px;
+					box-shadow: none;
+				}
+
+				.panel { margin-bottom: 22px; border-radius: 6px; }
+				.ring-card, .member { border-radius: 6px; }
+				.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+				.member-list { display: grid; gap: 16px; padding: 0; margin: 16px 0 0; list-style: none; }
+
+				form { display: grid; gap: 9px; }
+				label { font-weight: 700; }
+				input, textarea {
+					width: 100%;
+					border: 1px solid rgba(44, 38, 30, .24);
+					border-radius: 5px;
+					background: rgba(255, 253, 245, .82);
+					color: var(--ink);
+					font: inherit;
+					padding: 9px 10px;
+				}
+
+				input:focus, textarea:focus {
+					outline: 2px solid rgba(49, 91, 128, .18);
+					border-color: rgba(49, 91, 128, .48);
+				}
+
+				textarea {
+					min-height: 150px;
+					font-family: "Courier New", monospace;
+					font-size: .9rem;
+					resize: vertical;
+				}
+
+				button, .button {
+					display: inline-block;
+					width: fit-content;
+					border: 1px solid rgba(49, 91, 128, .28);
+					border-radius: 999px;
+					background: rgba(49, 91, 128, .08);
+					color: var(--ink);
+					padding: 7px 13px;
+					font: 700 .95rem Georgia, "Times New Roman", serif;
+					text-decoration: none;
+					box-shadow: none;
+					cursor: pointer;
+				}
+
+				button:hover, .button:hover { background: rgba(49, 91, 128, .14); }
+				.danger {
+					border-color: rgba(159, 63, 47, .26);
+					background: rgba(159, 63, 47, .08);
+					color: #6f2a20;
+				}
+				.danger:hover { background: rgba(159, 63, 47, .14); }
+				.muted { color: #625846; font-size: .95rem; }
+				.tiny { font-size: .84rem; }
+				.kicker {
+					color: var(--ember);
+					font-weight: 700;
+					letter-spacing: .08em;
+					text-transform: uppercase;
+				}
+				.actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+				.webring-preview {
+					display: inline-flex;
+					gap: 8px;
+					flex-wrap: wrap;
+					align-items: center;
+					margin: 8px 0 12px;
+					border: 1px solid rgba(69, 107, 75, .2);
+					border-radius: 999px;
+					background: rgba(237, 243, 223, .5);
+					padding: 7px 11px;
+				}
+
+				.error-panel {
+					max-width: 680px;
+					margin: 18px auto 10px;
+				}
+
+				@media (max-width: 620px) {
+					.site-shell { margin-top: 14px; box-shadow: 0 10px 30px rgba(33, 28, 22, .12); }
+					main { padding: 16px; }
+				}
+			</style>
 		</head>
 		<body>
-			{ children... }
+			<div class="site-shell">
+				<header class="site-header">
+					<div class="brand">
+						<a href="/">waygates</a>
+						<span>indie web rings through quiet portals</span>
+					</div>
+				</header>
+				<main>
+					{ children... }
+				</main>
+				<footer class="site-footer">
+					handmade links, lamp-lit paths, no algorithm
+				</footer>
+			</div>
 		</body>
 	</html>
 }
-

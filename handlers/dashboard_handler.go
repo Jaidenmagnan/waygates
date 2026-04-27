@@ -27,7 +27,7 @@ func NewDashboardHandler(waygateService *services.WaygateService, waygateLinkSer
 func (h *DashboardHandler) Dashboard(c *gin.Context) {
 	value, ok := c.Get("user")
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		respondError(c, http.StatusUnauthorized, "The gate stayed closed", "Sign in before opening your rings.")
 		return
 	}
 
@@ -35,7 +35,7 @@ func (h *DashboardHandler) Dashboard(c *gin.Context) {
 
 	s, err := h.waygateService.ListUserWaygates(user.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load waygates"})
+		respondError(c, http.StatusInternalServerError, "The map went dim", "Your waygates could not be loaded.")
 		return
 	}
 
@@ -47,23 +47,27 @@ func (h *DashboardHandler) ViewWaygate(c *gin.Context) {
 
 	waygateIDInt, err := strconv.Atoi(waygateID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid waygate id",
-		})
+		respondError(c, http.StatusBadRequest, "The waygate mark is unclear", "That waygate address is not valid.")
 		return
 	}
 
 	waygate, err := h.waygateService.GetWaygateByID(waygateIDInt)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load waygate"})
+		respondError(c, http.StatusNotFound, "No waygate here", "That waygate could not be found.")
+		return
+	}
+
+	user := c.MustGet("user").(models.User)
+	if waygate.UserId != user.ID {
+		respondError(c, http.StatusForbidden, "The gate is warded", "You do not have permission to view this waygate.")
 		return
 	}
 
 	waygateLinks, err := h.waygateLinkService.ListWaygateLinks(waygate.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load waygate"})
+		respondError(c, http.StatusInternalServerError, "The map went dim", "This waygate's links could not be loaded.")
 		return
 	}
 
-	components.Waygate(waygate, waygateLinks).Render(c.Request.Context(), c.Writer)
+	components.Waygate(waygate, waygateLinks, requestBaseURL(c)).Render(c.Request.Context(), c.Writer)
 }

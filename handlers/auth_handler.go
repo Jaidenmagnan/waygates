@@ -32,23 +32,26 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 
 	var signUpRequest SignUpRequest
 	if err := c.ShouldBind(&signUpRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "failed to read body",
-		})
+		respondError(c, http.StatusBadRequest, "The gate would not open", "Check the signup form and try again.")
 		return
 	}
 
 	user, err := h.authService.Signup(signUpRequest.Username, signUpRequest.Email, signUpRequest.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
+		respondError(c, http.StatusInternalServerError, "The gate would not open", err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": user,
-	})
+	tokenString, err := h.authService.GenerateToken(&user)
+	if err != nil {
+		respondError(c, http.StatusInternalServerError, "The gate would not open", "Your account was created, but sign-in could not be completed.")
+		return
+	}
+
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie("Authorization", tokenString, 7*24*60*60, "/", "", c.Request.TLS != nil, true)
+	c.Header("HX-Redirect", "/")
+	c.Redirect(http.StatusSeeOther, "/")
 }
 
 // Signin handles user signin requests by creating a JWT token.
@@ -61,40 +64,34 @@ func (h *AuthHandler) Signin(c *gin.Context) {
 	var signinRequest SigninRequest
 
 	if err := c.ShouldBind(&signinRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "failed to read body",
-		})
+		respondError(c, http.StatusBadRequest, "The gate would not open", "Check your email and password, then try again.")
 		return
 	}
 
 	user, err := h.authService.Signin(signinRequest.Email, signinRequest.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": err.Error(),
-		})
+		respondError(c, http.StatusUnauthorized, "The gate stayed closed", "That email and password did not match.")
 		return
 	}
 
 	tokenString, err := h.authService.GenerateToken(user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "failed to generate token",
-		})
+		respondError(c, http.StatusInternalServerError, "The gate would not open", "Sign-in could not be completed.")
 		return
 	}
 
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("Authorization", tokenString, 7*24*60*60, "/", "", true, true)
+	c.SetCookie("Authorization", tokenString, 7*24*60*60, "/", "", c.Request.TLS != nil, true)
 	c.Header("HX-Redirect", "/")
-	c.Status(http.StatusOK)
+	c.Redirect(http.StatusSeeOther, "/")
 }
 
 // Signout handles user signout requests by clearing the Authorization cookie.
 func (h *AuthHandler) Signout(c *gin.Context) {
-	c.SetCookie("Authorization", "", -1, "", "", true, true)
+	c.SetCookie("Authorization", "", -1, "/", "", c.Request.TLS != nil, true)
 
 	c.Header("HX-Redirect", "/signin")
-	c.Status(http.StatusOK)
+	c.Redirect(http.StatusSeeOther, "/signin")
 }
 
 // Renders the signup page.

@@ -3,47 +3,58 @@ import ("github.com/Jaidenmagnan/waygates/models"
     "fmt")
 
 templ CreateWaygateLinkForm(waygate_id int) {
-    <form hx-boost="true" method="POST" action={fmt.Sprintf("/api/waygates/%d/links", waygate_id)}>
-
-    <input type="text" name="name" placeholder="link name" required/>
-    <input type="text" name="link" placeholder="link" required />
-    <input type="hidden" name="waygate_id" value={fmt.Sprintf("%d", waygate_id)}>
-    <button type="submit">Create Link</button>
+    <form method="POST" action={fmt.Sprintf("/api/waygates/%d/links/", waygate_id)}>
+        <label for="name">Friend or site name</label>
+        <input type="text" id="name" name="name" placeholder="Mina's Notebook" required/>
+        <label for="link">Website URL</label>
+        <input type="text" id="link" name="link" placeholder="https://example.net" required/>
+        <input type="hidden" name="waygate_id" value={fmt.Sprintf("%d", waygate_id)}/>
+        <button type="submit">Add Site</button>
     </form>
 }
 
-templ ListWaygateLinks(waygate_id int, waygateLinks []models.WaygateLink) {
-    <ul>
-        for _, wgl := range waygateLinks {
-            <li>
-            { wgl.Name }
-            <button 
-                    hx-delete={ fmt.Sprintf("/api/waygates/%d/links/%d", waygate_id, wgl.ID) }
-                    hx-trigger="click"
-                    hx-target="closest li"
-                    hx-swap="outerHTML"
-                    type="submit"
-                    >
-                    Delete
-            </button>
-            <button>
-                Copy
-            </button>
-            </li>   
-        }
-    </ul>
+templ ListWaygateLinks(waygate models.Waygate, waygateLinks []models.WaygateLink, baseURL string) {
+    if len(waygateLinks) == 0 {
+        <p class="muted">Add your first friend site. The snippet appears here after it joins the ring.</p>
+    } else {
+        <ul class="member-list">
+            for _, wgl := range waygateLinks {
+                <li class="member">
+                    <h3>{ wgl.Name }</h3>
+                    <p><a href={wgl.Link}>{ wgl.Link }</a></p>
+                    <div class="webring-preview">
+                        <a href={fmt.Sprintf("/rings/%d/%d/previous", waygate.ID, wgl.ID)}>previous</a>
+                        <span>waygate: { waygate.Name }</span>
+                        <a href={fmt.Sprintf("/rings/%d/%d/next", waygate.ID, wgl.ID)}>next</a>
+                    </div>
+                    <p class="tiny muted">Send this HTML charm to { wgl.Name }:</p>
+                    <textarea readonly>{ Snippet(baseURL, waygate.ID, wgl.ID, waygate.Name) }</textarea>
+                    <p class="tiny muted">Quick test link: <a href={ InviteURL(baseURL, waygate.ID, wgl.ID) }>{ InviteURL(baseURL, waygate.ID, wgl.ID) }</a></p>
+                    <form method="POST" action={fmt.Sprintf("/api/waygates/%d/links/%d/delete", waygate.ID, wgl.ID)}>
+                        <button class="danger" type="submit">Remove Site</button>
+                    </form>
+                </li>
+            }
+        </ul>
+    }
 }
 
-templ Waygate(waygate models.Waygate, waygateLinks []models.WaygateLink) {
+templ Waygate(waygate models.Waygate, waygateLinks []models.WaygateLink, baseURL string) {
     @BaseLayout("Waygate") {
-    <div class="waygate-detail">
-        <h2>{ waygate.Name }</h2>
-        <p>ID: { waygate.ID }</p>
-        @CreateWaygateLinkForm(waygate.ID)
-        @ListWaygateLinks(waygate.ID, waygateLinks)
-    </div>
-    <a href="/">back</a>
-
+        <div class="toolbar">
+            <div>
+                <h1>{ waygate.Name }</h1>
+                <p class="muted">Add each friend's website, then send them their HTML charm.</p>
+            </div>
+            <a class="button" href="/">Back</a>
+        </div>
+        <section class="panel">
+            <h2>Add friend site</h2>
+            @CreateWaygateLinkForm(waygate.ID)
+        </section>
+        <section>
+            <h2>Ring members</h2>
+            @ListWaygateLinks(waygate, waygateLinks, baseURL)
+        </section>
     }
-
 }
